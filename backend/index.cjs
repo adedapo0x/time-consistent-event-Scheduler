@@ -10,7 +10,7 @@ app.use(express.json())
 const allowedOrigins = [
   'http://127.0.0.1:5500',
   'http://localhost:5500',
-  'https://time-consistent-event-scheduler.vercel.app/'
+  'https://time-consistent-event-scheduler.vercel.app'
 ]
 
 app.use(cors({ origin: allowedOrigins }));
@@ -18,7 +18,7 @@ app.use(cors({ origin: allowedOrigins }));
 const validate = require("./validate-middleware")
 const Event = require("./models")
 
-app.post('/event', validate, async (req, res) => {
+app.post('/', validate, async (req, res) => {
     try{
         const { eventName, eventTime } = req.body
 
