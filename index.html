@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Event Planner</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 700px; margin: 2em auto; color: #333; }
+        h1, h2 { color: #111; }
+        form { background-color: #f9f9f9; padding: 1.5em; border-radius: 8px; border: 1px solid #ddd; }
+        input, button { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
+        button { background-color: #007bff; color: white; font-weight: bold; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #eventList { list-style: none; padding: 0; }
+        #eventList li { background-color: #fff; border: 1px solid #ddd; padding: 1em; margin-bottom: 10px; border-radius: 8px; }
+        #eventList li strong { display: block; font-size: 1.2em; margin-bottom: 5px; }
+        .loading { text-align: center; color: #777; }
+    </style>
+</head>
+<body>
+
+    <h1>Global Event Planner 🌍</h1>
+
+    <h2>Create a New Event</h2>
+    <form id="eventForm">
+        <label for="eventName">Event Name:</label>
+        <input type="text" id="eventName" placeholder="e.g., Team Sync Meeting" required>
+
+        <label for="eventTime">Select Your Local Event Time:</label>
+        <input type="datetime-local" id="eventTime" required>
+        
+        <button type="submit">Create Event</button>
+    </form>
+    <p id="formMessage" style="text-align: center;"></p>
+
+    <hr style="margin: 2em 0;">
+
+    <h2>Upcoming Events</h2>
+    <div id="eventList" class="loading">Loading events...</div>
+
+    <script>
+        // -- CONFIGURATION --
+        // IMPORTANT: Replace this with your actual API URL
+        const API_URL = 'http://localhost:3000/api/event';
+
+        // -- DOM ELEMENTS --
+        const eventForm = document.getElementById('eventForm');
+        const eventNameInput = document.getElementById('eventName');
+        const eventTimeInput = document.getElementById('eventTime');
+        const formMessage = document.getElementById('formMessage');
+        const eventListDiv = document.getElementById('eventList');
+
+        /**
+         * Fetches all events from the API and displays them.
+         * Times are converted to the user's local timezone for display.
+         */
+        const fetchAndDisplayEvents = async () => {
+            try {
+                const response = await fetch(API_URL);
+                const events = await response.json();
+
+                if (events.length === 0) {
+                    eventListDiv.innerHTML = '<p>No events found. Create one!</p>';
+                    return;
+                }
+                
+                eventListDiv.innerHTML = ''; // Clear the loading message
+                
+                events
+                  .sort((a, b) => new Date(a.eventTime) - new Date(b.eventTime)) // Sort by date
+                  .forEach(event => {
+                    const eventElement = document.createElement('li');
+                    
+                    // This is the key part for timezone conversion!
+                    // We create a Date object from the UTC string from the DB.
+                    const dateObject = new Date(event.eventTime);
+                    
+                    // .toLocaleString() automatically displays it in the user's browser timezone.
+                    const localTime = dateObject.toLocaleString(undefined, {
+                        dateStyle: 'full',
+                        timeStyle: 'short'
+                    });
+
+                    eventElement.innerHTML = `
+                        <strong>${event.content}</strong>
+                        <span>Your Local Time: ${localTime}</span>
+                    `;
+                    eventListDiv.appendChild(eventElement);
+                });
+
+            } catch (error) {
+                eventListDiv.innerHTML = '<p style="color: red;">Failed to load events.</p>';
+                console.error('Error fetching events:', error);
+            }
+        };
+
+        /**
+         * Handles the form submission to create a new event.
+         */
+        eventForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            formMessage.textContent = 'Submitting...';
+
+            const localTimeValue = eventTimeInput.value;
+            const eventName = eventNameInput.value;
+
+            // 1. Convert the user's local time to a UTC ISO string
+            const utcIsoString = new Date(localTimeValue).toISOString();
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        eventName,
+                        eventTime: utcIsoString
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to create event.');
+                }
+
+                // Success!
+                formMessage.textContent = 'Event created successfully!';
+                eventForm.reset();
+                
+                // Refresh the list to show the new event
+                await fetchAndDisplayEvents();
+
+            } catch (error) {
+                formMessage.textContent = `Error: ${error.message}`;
+                formMessage.style.color = 'red';
+                console.error('Error creating event:', error);
+            }
+
+            // Clear the message after 3 seconds
+            setTimeout(() => { formMessage.textContent = ''; formMessage.style.color = 'inherit'; }, 3000);
+        });
+
+        // -- INITIALIZATION --
+        // Fetch and display all events when the page first loads
+        fetchAndDisplayEvents();
+    </script>
+</body>
+</html>
