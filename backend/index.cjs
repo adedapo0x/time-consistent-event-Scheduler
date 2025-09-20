@@ -37,7 +37,7 @@ app.post('/', validate, async (req, res) => {
     }
 })
 
-app.get('/event', async (req, res) => {
+app.get('/', async (req, res) => {
     try{
         const events = await Event.find() 
         res.json(events)
