@@ -1,13 +1,22 @@
 require("dotenv").config()
 
 const express = require("express")
+const cors = require("cors")
+const mongoose = require("mongoose")
 
 const app = express()
 app.use(express.json())
 
+const allowedOrigins = [
+  'http://127.0.0.1:5500',
+  'http://localhost:5500',
+  // Add your deployed frontend URL here
+]
+
+app.use(cors({ origin: allowedOrigins }));
+
 const validate = require("./validate-middleware")
 const Event = require("./models")
-
 
 app.post('/event', validate, async (req, res) => {
     try{
@@ -28,7 +37,7 @@ app.post('/event', validate, async (req, res) => {
     }
 })
 
-app.get('/event', async () => {
+app.get('/event', async (req, res) => {
     try{
         const events = await Event.find() 
         res.json(events)
@@ -44,20 +53,26 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Something went wrong" });
 });
 
+
 const connectDB = async () => {
     try {
         await mongoose.connect(process.env.DATABASE_URI)
         console.log("Database connected to successfully")
     } catch (error) {
         console.error("Unsuccessful DB connection")
+        console.error(error)
         process.exit(1)
     }
 }
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3500
 
-await connectDB()
-app.listen(3500, () => {
-    console.log("Server running on port 3500, hehe")
+const startServer = async () => {
+    await connectDB()
+    app.listen(PORT, async () => {
+        console.log(`Server running on port ${PORT} hehe`)
+})}
 
-})
+startServer()
+
+

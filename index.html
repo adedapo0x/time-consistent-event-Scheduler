@@ -19,7 +19,7 @@
 </head>
 <body>
 
-    <h1>Global Event Planner 🌍</h1>
+    <h1>Global Event Planner</h1>
 
     <h2>Create a New Event</h2>
     <form id="eventForm">
@@ -41,7 +41,7 @@
     <script>
         // -- CONFIGURATION --
         // IMPORTANT: Replace this with your actual API URL
-        const API_URL = 'http://localhost:3000/api/event';
+        const API_URL = 'http://127.0.0.1:3500/event';
 
         // -- DOM ELEMENTS --
         const eventForm = document.getElementById('eventForm');
@@ -63,7 +63,7 @@
                     eventListDiv.innerHTML = '<p>No events found. Create one!</p>';
                     return;
                 }
-                
+            
                 eventListDiv.innerHTML = ''; // Clear the loading message
                 
                 events
@@ -80,9 +80,9 @@
                         dateStyle: 'full',
                         timeStyle: 'short'
                     });
-
+            
                     eventElement.innerHTML = `
-                        <strong>${event.content}</strong>
+                        <strong>${event.eventName}</strong>
                         <span>Your Local Time: ${localTime}</span>
                     `;
                     eventListDiv.appendChild(eventElement);

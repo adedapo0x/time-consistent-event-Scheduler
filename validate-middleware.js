@@ -1,6 +1,6 @@
 const { isValid, parseISO  } = require("date-fns")
 
-export const validate = (req, res, next) => {
+const validate = (req, res, next) => {
     const { eventTime } = req.body
 
     if (!eventTime){
@@ -22,4 +22,6 @@ export const validate = (req, res, next) => {
 
     next()
 }
+
+module.exports = validate
 
