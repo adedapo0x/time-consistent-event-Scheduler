@@ -10,7 +10,7 @@ app.use(express.json())
 const allowedOrigins = [
   'http://127.0.0.1:5500',
   'http://localhost:5500',
-  // Add your deployed frontend URL here
+  'https://time-consistent-event-scheduler.vercel.app/'
 ]
 
 app.use(cors({ origin: allowedOrigins }));
